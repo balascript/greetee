@@ -16,6 +16,9 @@
         android:id="@+id/splashImage"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         android:src="@drawable/app_logo"
-        android:layout_margin="30dp" />
+        android:layout_margin="30dp"
+        android:maxHeight="200dp"/>
 </RelativeLayout>
