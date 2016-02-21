@@ -45,7 +45,7 @@ public class AppControllerActivity extends AppCompatActivity {
         homeText=(TextView)findViewById(R.id.hometext);
 
         /// testing volley library
-        String url = "http://api.openweathermap.org/data/2.5/find?lat=55.5&lon=37.5&cnt=1&appid=44db6a862fba0b067b1930da0d769e98";
+        String url = "http://api.openweathermap.org/data/2.5/find?lat=37.3544&lon=121.969&cnt=1&appid=7525749b09649701a30c07287270b80a";
 
         JsonObjectRequest jsonRequest = new JsonObjectRequest
                 (Request.Method.GET, url, new Response.Listener<JSONObject>() {
