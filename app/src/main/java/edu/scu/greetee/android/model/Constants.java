@@ -19,7 +19,9 @@ public class Constants {
     public static final String[] PERMISSIONS={"permission.READ_CALENDAR","android.permission.USE_CREDENTIALS","android.permission.MANAGE_ACCOUNTS","android.permission.GET_ACCOUNTS"};
     public static final String DEFAULT_LOCATION_STRING = "user_default_location";
     public static final String OPEN_MAP_API_URL="http://api.openweathermap.org/data/2.5/weather?";
+    public static final String Google_MAP_URI="https://maps.googleapis.com/maps/api/directions/json?";
     public static final String OPEN_WEATHER_MAP_API_KEY = "7525749b09649701a30c07287270b80a";
+    public static final String GOOGLE_API_KEY="AIzaSyCL0WFpdrptVOewpquIQfUaMnyqbiotnCU";
     public static final int DEFAULT_LOCATION_ZIP=53706;
     public static final String STRING_PARAM_OPERATION = "REQUEST_WEATHER";
     public static final String SERVICE_RESPONSE = "Service_response";
@@ -29,13 +31,20 @@ public class Constants {
     public static final int SERVICE_RESPONSE_EVENT = 6021;
     public static final String SERVICE_INTENT = "edu.scu.service.intent";
     public static final int USERAUTHERROR = 9999;
-
+    public static final double SOURCE_LOCATION[] = new double[]{ 37.3540533,-121.9553899 };
+    public static final int SERVICE_REQUEST_WEATHER_EVENT = 6030;
+    public static final int SERVICE_RESPONSE_WEATHER_EVENT = 6030;
+    public static final String SERVICE_REQUEST_WEATHER_EVENT_ADDRESS = "addressofevent";
+    public static final int SERVICE_REQUEST_DIRECTION = 6040;
+    public static final int SERVICE_RESPONSE_DIRECTION = 6041;
+    public static final String SERVICE_REQUEST_DIRECTION_ORIGIN = "origin";
+    public static final String SERVICE_REQUEST_DIRECTION_DESTINATION = "destination";
 
     public static void toastMessage(Context ctx, String msg){
         Toast.makeText(ctx,msg,Toast.LENGTH_LONG);
     }
     // Projection array. Creating indices for this array instead of doing
-// dynamic lookups improves performance.
+    // dynamic lookups improves performance.
     public static final String[] CALENDAR_PROJECTION = new String[] {
             CalendarContract.Calendars._ID,                           // 0
             CalendarContract.Calendars.ACCOUNT_NAME,                  // 1
@@ -48,12 +57,11 @@ public class Constants {
             CalendarContract.Events.DTSTART,
             CalendarContract.Events.DTEND,
             CalendarContract.Events.ACCOUNT_NAME};
-    // The indices for the projection array above.
+
     public static final int PROJECTION_TITLE_INDEX = 0;
     public static final int PROJECTION_EVENT_LOCATION_INDEX = 1;
     public static final int PROJECTION_BEGIN_INDEX = 2;
     public static final int PROJECTION_END_INDEX = 3;
-  //  public static final int PROJECTION_ALL_DAY_INDEX = 4;
     public static final int PROJECTION_ACCOUNT_NAME_INDEX = 4;
 
 }

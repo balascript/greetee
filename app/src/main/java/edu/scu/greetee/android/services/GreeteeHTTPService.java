@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Address;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -18,7 +19,9 @@ import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
@@ -50,6 +53,7 @@ import java.util.concurrent.TimeoutException;
 
 import edu.scu.greetee.android.Utility;
 import edu.scu.greetee.android.model.Constants;
+import edu.scu.greetee.android.model.Direction;
 import edu.scu.greetee.android.model.Event;
 import edu.scu.greetee.android.model.Weather;
 
@@ -91,6 +95,21 @@ public class GreeteeHTTPService extends IntentService {
                 bundle.putParcelable("event", event);
                 bIntent.putExtra("data", bundle);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_EVENT);
+                break;
+            case Constants.SERVICE_REQUEST_WEATHER_EVENT:
+                Address query= intent.getExtras().getParcelable(Constants.SERVICE_REQUEST_WEATHER_EVENT_ADDRESS);
+                Weather reportEvent= getWeatherForAddress(query);
+                bundle.putParcelable("weather", reportEvent);
+                bIntent.putExtra("data", bundle);
+                bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_WEATHER_EVENT);
+                break;
+            case Constants.SERVICE_REQUEST_DIRECTION:
+                Address origin= intent.getExtras().getParcelable(Constants.SERVICE_REQUEST_DIRECTION_ORIGIN);
+                Address destination= intent.getExtras().getParcelable(Constants.SERVICE_REQUEST_DIRECTION_DESTINATION);
+                Direction result= getDirection(origin,destination);
+                bundle.putParcelable("direction", result);
+                bIntent.putExtra("data", bundle);
+                bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_DIRECTION);
                 break;
 
         }
@@ -161,6 +180,7 @@ public class GreeteeHTTPService extends IntentService {
         }
 
     }
+
 
 
     private Event getNextEventForTheUser() {
@@ -260,6 +280,132 @@ public class GreeteeHTTPService extends IntentService {
             }
             else return null;
         }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private Direction getDirection( Address origin, Address destination)
+    {
+        try{
+            RequestFuture<JSONObject> future = RequestFuture.newFuture();
+            Uri builtUri = Uri.parse(Constants.Google_MAP_URI).buildUpon()
+                    .appendQueryParameter("sensor","false").appendQueryParameter("units","imperial")
+                    .appendQueryParameter("mode","driving")
+                    .appendQueryParameter("origin","santaclara") /// hardcoded by frustration. TODO figureout the map activity soon
+                    .appendQueryParameter("destination",destination.getLocality())
+                    .appendQueryParameter("key",Constants.GOOGLE_API_KEY)
+                    .build();
+            URL url = new URL(builtUri.toString());
+
+
+            JsonObjectRequest request = new JsonObjectRequest(url.toString(), null, future, future);
+            appQueue.add(request);
+
+            JSONObject response = future.get(100, TimeUnit.SECONDS); // this will block (forever) if supplied nothing
+
+            JSONArray routesArray = response.getJSONArray("routes");
+
+            if (routesArray.length() > 0) {
+                JSONObject routeDict = routesArray.getJSONObject(0);
+                JSONArray legsArray = routeDict.getJSONArray("legs");
+
+                if (legsArray.length() > 0) {
+
+                    JSONObject legs;
+
+                    if (legsArray.length() > 1)
+                        legs = legsArray.getJSONObject(1);
+                    else
+                        legs = legsArray.getJSONObject(0);
+
+                    double timeSec = legs.getJSONObject("duration").getDouble("value");
+
+                    return new Direction((int) timeSec,10);
+
+                }
+            }
+            return null;
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+            return null;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    private Weather getWeatherForAddress(Address location) {
+
+        try {
+            RequestFuture<JSONObject> future = RequestFuture.newFuture();
+            //BUild the URL
+            String format = "json";
+            String units = "imperial";
+            final String FORMAT_PARAM = "mode";
+            final String UNITS_PARAM = "units";
+            final String APPID_PARAM = "APPID";
+            final String LAT_PARAM = "lat";
+            final String LON_PARAM = "lon";
+            Uri builtUri = Uri.parse(Constants.OPEN_MAP_API_URL).buildUpon()
+                    .appendQueryParameter(LAT_PARAM, String.valueOf(location.getLatitude()))
+                    .appendQueryParameter(LON_PARAM, String.valueOf(location.getLongitude()))
+                    .appendQueryParameter(FORMAT_PARAM, format)
+                    .appendQueryParameter(UNITS_PARAM, units)
+                    .appendQueryParameter(APPID_PARAM, Constants.OPEN_WEATHER_MAP_API_KEY)
+                    .build();
+
+            URL url = new URL(builtUri.toString());
+
+
+            JsonObjectRequest request = new JsonObjectRequest(url.toString(), null, future, future);
+            appQueue.add(request);
+
+            JSONObject response = future.get(100, TimeUnit.SECONDS); // this will block (forever) if supplied nothing
+
+            Weather weather = new Weather();
+
+            JSONObject weatherJson = response.getJSONArray("weather").getJSONObject(0);
+
+            weather.setSummary(weatherJson.getString("main"));
+            weather.setId(weatherJson.getInt("id"));
+            weather.setArt(Utility.getArtResourceForWeatherCondition(weather.getId()));
+            weather.setIcon(Utility.getIconResourceForWeatherCondition(weather.getId()));
+
+            JSONObject temperatureObject = response.getJSONObject("main");
+
+            weather.setHiTemp(temperatureObject.getDouble("temp_max"));
+            weather.setLowTemp(temperatureObject.getDouble("temp_min"));
+            weather.setTemperature(temperatureObject.getDouble("temp"));
+
+            return weather;
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+            return null;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (JSONException e) {
             e.printStackTrace();
             return null;
         }

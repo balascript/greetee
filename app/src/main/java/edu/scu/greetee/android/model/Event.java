@@ -1,5 +1,6 @@
 package edu.scu.greetee.android.model;
 
+import android.location.Address;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -14,10 +15,10 @@ import java.util.Date;
  */
 public class Event implements Parcelable,Serializable{
     private String Name,locationString;
-    private Location location;
+    private Address location;
     private long startDate,endDate;
 
-    public Event(String name, String locationString,Location location, long startDate, long endDate) {
+    public Event(String name, String locationString,Address location, long startDate, long endDate) {
         Name = name;
         this.location = location;
         this.startDate = startDate;
@@ -50,7 +51,7 @@ public class Event implements Parcelable,Serializable{
         return Name;
     }
 
-    public Location getLocation() {
+    public Address getLocation() {
         return location;
     }
 
@@ -75,5 +76,15 @@ public class Event implements Parcelable,Serializable{
         dest.writeLong(endDate);
     }
 
+    public long getStartDate() {
+        return startDate;
+    }
 
+    public long getEndDate() {
+        return endDate;
+    }
+
+    public void setLocation(Address location) {
+        this.location = location;
+    }
 }

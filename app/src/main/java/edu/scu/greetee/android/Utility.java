@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,7 +19,18 @@ public class Utility {
         return prefs.getString(Constants.DEFAULT_LOCATION_STRING,
                 context.getString(R.string.pref_location_default));
     }
+    public static int[] splitToComponentTimes(BigDecimal biggy)
+    {
+        long longVal = biggy.longValue();
+        int hours = (int) longVal / 3600;
+        int remainder = (int) longVal - hours * 3600;
+        int mins = remainder / 60;
+        remainder = remainder - mins * 60;
+        int secs = remainder;
 
+        int[] ints = {hours , mins , secs};
+        return ints;
+    }
     public static boolean isMetric(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getString(context.getString(R.string.pref_units_key),
