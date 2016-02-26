@@ -11,29 +11,23 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 import edu.scu.greetee.android.model.Constants;
+import edu.scu.greetee.android.model.Event;
 import edu.scu.greetee.android.model.Weather;
 
 public class AppControllerActivity extends AppCompatActivity {
     private TextView HiTemp,LowTemp,Description,Day;
     private ImageView WeatherIcon;
-    private WeatherReciever receiver;
+    private DataReciever receiver;
 
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter(
-                "edu.scu.weather.report");
+        IntentFilter intentFilter = new IntentFilter(Constants.SERVICE_INTENT);
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver,intentFilter);
 
     }
@@ -52,11 +46,9 @@ public class AppControllerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_forecast);
         initUIandDrawer();
-        receiver= new WeatherReciever();
+        receiver= new DataReciever();
         Intent GreeteeService= new Intent(this,edu.scu.greetee.android.services.GreeteeHTTPService.class);
-        GreeteeService.putExtra(Constants.STRING_PARAM_OPERATION,"test");
-        IntentFilter intentFilter = new IntentFilter(
-                "edu.scu.weather.report");
+        GreeteeService.putExtra(Constants.STRING_PARAM_OPERATION,Constants.SERVICE_REQUEST_WEATHER);
         startService(GreeteeService);
     }
 
@@ -71,14 +63,35 @@ public class AppControllerActivity extends AppCompatActivity {
 
     }
 
-    public class WeatherReciever extends BroadcastReceiver{
+    public class DataReciever extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            Bundle weatherBundle= intent.getBundleExtra("weatherBundle");
-            Weather weahter=(Weather) weatherBundle.getParcelable("weather");
 
-            Constants.toastMessage(getApplicationContext(),"Weather name "+ weahter.getSummary());
-            Log.d("Weather ",weahter.getSummary());
+            int response= intent.getIntExtra(Constants.SERVICE_RESPONSE,0);
+            Bundle bundleExtra= intent.getBundleExtra("data");
+            switch (response){
+                case Constants.SERVICE_RESPONSE_WEATHER:
+                    Weather weahter=(Weather) bundleExtra.getParcelable("weather");
+                    HiTemp.setText(weahter.getHiTemp()+"");
+                    LowTemp.setText(weahter.getLowTemp()+"");
+                    Day.setText(new SimpleDateFormat("EEEE", Locale.ENGLISH).format(Calendar.getInstance().getTime()));
+                    WeatherIcon.setImageResource(weahter.getArt());
+                    Description.setText(weahter.getSummary());
+                    Constants.toastMessage(AppControllerActivity.this,"Weather name "+ weahter.getSummary());
+                    Log.d("Weather ",weahter.getSummary());
+                    break;
+                case Constants.SERVICE_RESPONSE_EVENT:
+                    Event event=(Event) bundleExtra.getParcelable("event");
+                    Log.d("Event", event.getName());
+                    break;
+                case Constants.USERAUTHERROR:
+                    Intent errorIntent= (Intent) intent.getExtras().get("intent");
+                    startActivityForResult(
+                            errorIntent, Constants.REQUEST_ACCOUNT_PICKER);
+
+            }
+
+
         }
     }
 

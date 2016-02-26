@@ -12,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,7 +29,6 @@ import edu.scu.greetee.android.model.Constants;
 
 public class WelcomeActivity extends AppCompatActivity {
     GoogleAccountCredential mCredential;
-    ProgressDialog mProgress;
     SharedPreferences settings;
 
     @Override
@@ -47,7 +47,7 @@ public class WelcomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
-        settings = getPreferences(Context.MODE_PRIVATE);
+        settings = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         if (Build.VERSION.SDK_INT >= 23) {
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED)
@@ -156,7 +156,7 @@ public class WelcomeActivity extends AppCompatActivity {
                     if (accountName != null) {
                         mCredential.setSelectedAccountName(accountName);
                         SharedPreferences settings =
-                                getPreferences(Context.MODE_PRIVATE);
+                                PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(Constants.PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
