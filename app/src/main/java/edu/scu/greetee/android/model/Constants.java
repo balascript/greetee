@@ -39,6 +39,9 @@ public class Constants {
     public static final int SERVICE_RESPONSE_DIRECTION = 6041;
     public static final String SERVICE_REQUEST_DIRECTION_ORIGIN = "origin";
     public static final String SERVICE_REQUEST_DIRECTION_DESTINATION = "destination";
+    public static final int SERVICE_RESPONSE_ALERT = 6051;
+    public static final int SERVICE_REQUEST_ALERT = 6050;
+    public static final String SERVICE_REQUEST_ALERT_STRING = "usermessage";
 
     public static void toastMessage(Context ctx, String msg){
         Toast.makeText(ctx,msg,Toast.LENGTH_LONG);

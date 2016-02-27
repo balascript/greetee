@@ -108,7 +108,7 @@ public class AppControllerActivity extends AppCompatActivity {
             switch (response){
                 case Constants.SERVICE_RESPONSE_WEATHER:
                     Weather weahter=(Weather) bundleExtra.getParcelable("weather");
-                    HiTemp.setText(weahter.getHiTemp()+"");
+                    HiTemp.setText((int)weahter.getHiTemp()+"");
                     LowTemp.setText(weahter.getLowTemp()+"");
                     Day.setText(new SimpleDateFormat("EEEE", Locale.ENGLISH).format(Calendar.getInstance().getTime()));
                     WeatherIcon.setImageResource(weahter.getArt());

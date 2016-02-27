@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Address;
+import android.location.Geocoder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -41,11 +42,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +88,11 @@ public class GreeteeHTTPService extends IntentService {
         Bundle bundle = new Bundle();
         Intent bIntent = new Intent(Constants.SERVICE_INTENT);
         switch (operation) {
+            case Constants.SERVICE_REQUEST_ALERT:
+                String userMessage= getUserMessage();
+                bIntent.putExtra(Constants.SERVICE_REQUEST_ALERT_STRING,userMessage);
+                bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_ALERT );
+                break;
             case Constants.SERVICE_REQUEST_WEATHER:
                 Weather report = getWeather(Constants.DEFAULT_LOCATION_ZIP + "");
                 bundle.putParcelable("weather", report);
@@ -115,6 +124,72 @@ public class GreeteeHTTPService extends IntentService {
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(bIntent);
 
+
+    }
+
+    private String getUserMessage() {
+        Geocoder geocoder;
+        geocoder=new Geocoder(getBaseContext(), Locale.getDefault());
+        StringBuilder builder= new StringBuilder();
+        Weather current=getWeather("95050"); // Hardcoded for timebeing TODO get from shared pref
+        if(current!=null){
+            builder.append(" Its "+current.getTemperature()+"℉ and " +current.getSummary()+" outside.");
+        }
+        else{
+            builder.append(" I am sorry, I could't get you the weather update");
+        }
+        Event nextEvent= getNextEventForTheUserByProvider();
+        if(nextEvent==null){
+            builder.append(" I couldn't find any event from your calendar in next 24 hours ! Have a fun Day :)");
+        }
+        else {
+            Address source = null;
+            long diff = nextEvent.getStartDate() - java.util.Calendar.getInstance().getTimeInMillis();
+            if (diff <= (1000 * 60 * 60 * 24)) {          // find if there's any event for next 3 hours // time being //TODO its 24 hr set now
+                try {
+
+
+                    List<Address> destlist = geocoder.getFromLocationName(nextEvent.getLocationString(), 1);
+                    if (!destlist.isEmpty()) {
+                        nextEvent.setLocation(destlist.get(0));
+                    }
+                    List<Address> sourcelist = geocoder.getFromLocation(Constants.SOURCE_LOCATION[0], Constants.SOURCE_LOCATION[1], 1);
+                    if (!sourcelist.isEmpty()) {
+                        source = (sourcelist.get(0));
+                    }
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a");
+                    String logical_location=nextEvent.getLocation().getAddressLine(0);
+                    builder.append(" I found '"+nextEvent.getName()+"' at "+(logical_location==null?nextEvent.getLocationString():logical_location) +" at "+dateFormat.format(new Date(nextEvent.getStartDate())) );
+
+                    Weather eventWeather = getWeatherForAddress(nextEvent.getLocation());
+                    Direction eventDirection = getDirection(source, nextEvent.getLocation());
+
+                    if(eventWeather!=null){
+                        builder.append("\n\n Its "+eventWeather.getTemperature()+"℉ and " +eventWeather.getSummary()+" at "+(logical_location==null?nextEvent.getLocationString():logical_location)+".");
+
+                    }
+                    if(eventDirection!=null){
+                        int time[]= Utility.splitToComponentTimes(BigDecimal.valueOf(eventDirection.getDuration())); // TODO find miles and add them too
+                        builder.append(" Hey ! you can reach there in " + (time[0]>0?(time[0]+" Hours "):"")+(time[1]>0?(time[1]+" Minutes."):"."));
+                    }
+
+
+
+
+                } catch (IOException e) {
+
+                    e.printStackTrace();
+                    return " Error getting you the updates";
+                }
+            }
+            else {  // no event in next 3 hours
+                builder.append(" I couldn't find any event from your calendar in next 3 hours ! Have fun! Good Bye");
+            }
+
+        }
+
+
+        return builder.toString();
 
     }
 
