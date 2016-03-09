@@ -5,7 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Address;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
 import android.os.Build;
+import android.os.Parcelable;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -41,6 +45,16 @@ public class InfoActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_info);
+        Intent intent = getIntent();
+        if(intent.getType() != null && intent.getType().equals("application/" + getPackageName())) {
+            // Read the first record which contains the NFC data
+            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            NdefRecord relayRecord = ((NdefMessage)rawMsgs[0]).getRecords()[0];
+            String nfcData = new String(relayRecord.getPayload());
+
+            // Display the data on the tag
+            Toast.makeText(this, nfcData, Toast.LENGTH_SHORT).show();
+        }
         receiver= new DataReciever();
         InfoToUser=(TextView)findViewById(R.id.DialogText);
         speaker= new TextToSpeech(this,this);

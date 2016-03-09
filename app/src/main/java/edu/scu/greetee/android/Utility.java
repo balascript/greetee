@@ -19,6 +19,10 @@ public class Utility {
         return prefs.getString(Constants.DEFAULT_LOCATION_STRING,
                 context.getString(R.string.pref_location_default));
     }
+    public static boolean isNecessarySettingsDone(Context ctx){
+        SharedPreferences sharedpreferences= PreferenceManager.getDefaultSharedPreferences(ctx);
+        return sharedpreferences.getBoolean(Constants.isHomeSelectedString,false);
+    }
     public static int[] splitToComponentTimes(BigDecimal biggy)
     {
         long longVal = biggy.longValue();

@@ -6,6 +6,7 @@ import android.app.usage.UsageEvents;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Address;
@@ -26,16 +27,6 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.DateTime;
-import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.calendar.model.Calendar;
-import com.google.api.services.calendar.model.Events;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,7 +70,7 @@ public class GreeteeHTTPService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-
+        SharedPreferences sharedPreferences=PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         if (appQueue == null) {
             appQueue = Volley.newRequestQueue(this.getBaseContext());
         }
@@ -89,12 +80,12 @@ public class GreeteeHTTPService extends IntentService {
         Intent bIntent = new Intent(Constants.SERVICE_INTENT);
         switch (operation) {
             case Constants.SERVICE_REQUEST_ALERT:
-                String userMessage= getUserMessage();
+                String userMessage= getUserMessage(sharedPreferences);
                 bIntent.putExtra(Constants.SERVICE_REQUEST_ALERT_STRING,userMessage);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_ALERT );
                 break;
             case Constants.SERVICE_REQUEST_WEATHER:
-                Weather report = getWeather(Constants.DEFAULT_LOCATION_ZIP + "");
+                Weather report = getWeather(sharedPreferences.getFloat(Constants.HomeLatitudeString,0),sharedPreferences.getFloat(Constants.HomeLongitudeString,0));
                 bundle.putParcelable("weather", report);
                 bIntent.putExtra("data", bundle);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_WEATHER);
@@ -127,11 +118,11 @@ public class GreeteeHTTPService extends IntentService {
 
     }
 
-    private String getUserMessage() {
+    private String getUserMessage(SharedPreferences pref) {
         Geocoder geocoder;
         geocoder=new Geocoder(getBaseContext(), Locale.getDefault());
         StringBuilder builder= new StringBuilder();
-        Weather current=getWeather("95050"); // Hardcoded for timebeing TODO get from shared pref
+        Weather current=getWeather(pref.getFloat(Constants.HomeLatitudeString,0),pref.getFloat(Constants.HomeLongitudeString,0));
         if(current!=null){
             builder.append(" Its "+current.getTemperature()+"℉ and " +current.getSummary()+" outside.");
         }
@@ -153,6 +144,7 @@ public class GreeteeHTTPService extends IntentService {
                     if (!destlist.isEmpty()) {
                         nextEvent.setLocation(destlist.get(0));
                     }
+
                     List<Address> sourcelist = geocoder.getFromLocation(Constants.SOURCE_LOCATION[0], Constants.SOURCE_LOCATION[1], 1);
                     if (!sourcelist.isEmpty()) {
                         source = (sourcelist.get(0));
@@ -193,7 +185,7 @@ public class GreeteeHTTPService extends IntentService {
 
     }
 
-    private Weather getWeather(String Location) {
+    private Weather getWeather(double lat, double lon) {
 
         try {
             RequestFuture<JSONObject> future = RequestFuture.newFuture();
@@ -203,9 +195,11 @@ public class GreeteeHTTPService extends IntentService {
             final String FORMAT_PARAM = "mode";
             final String UNITS_PARAM = "units";
             final String APPID_PARAM = "APPID";
-            final String QUERY_PARAM = "zip";
+            final String LAT_PARAM = "lat";
+            final String LON_PARAM = "lon";
             Uri builtUri = Uri.parse(Constants.OPEN_MAP_API_URL).buildUpon()
-                    .appendQueryParameter(QUERY_PARAM, Location)
+                    .appendQueryParameter(LAT_PARAM, String.valueOf(lat))
+                    .appendQueryParameter(LON_PARAM, String.valueOf(lon))
                     .appendQueryParameter(FORMAT_PARAM, format)
                     .appendQueryParameter(UNITS_PARAM, units)
                     .appendQueryParameter(APPID_PARAM, Constants.OPEN_WEATHER_MAP_API_KEY)
@@ -258,7 +252,7 @@ public class GreeteeHTTPService extends IntentService {
 
 
 
-    private Event getNextEventForTheUser() {
+/*    private Event getNextEventForTheUser() {
         com.google.api.services.calendar.Calendar mService = null;
         Exception mLastError = null;
         GoogleAccountCredential mCredential = GoogleAccountCredential.usingOAuth2(
@@ -288,7 +282,7 @@ public class GreeteeHTTPService extends IntentService {
                     .setTimeMax(new DateTime(System.currentTimeMillis() + (1000 * 60 * 60 * 24)))
                     .execute();
             List<com.google.api.services.calendar.model.Event> items = events.getItems();
-           /* for (com.google.api.services.calendar.model.Event event : items) {
+           *//* for (com.google.api.services.calendar.model.Event event : items) {
 
                 DateTime start = event.getStart().getDateTime();
                 if (start == null) {
@@ -296,7 +290,7 @@ public class GreeteeHTTPService extends IntentService {
                 }
 
 
-            }*/
+            }*//*
             com.google.api.services.calendar.model.Event event = items.get(0);
             if (event == null)
                 return null;
@@ -314,7 +308,7 @@ public class GreeteeHTTPService extends IntentService {
             e.printStackTrace();
             return null;
         }
-    }
+    }*/
 
     private boolean isDeviceOnline() {
         ConnectivityManager connMgr =
@@ -330,13 +324,11 @@ public class GreeteeHTTPService extends IntentService {
             ContentResolver cr = getContentResolver();
             Uri uri = CalendarContract.Events.CONTENT_URI;
             String selection = "(" +
-                    "(" + CalendarContract.Events.ACCOUNT_NAME + " = ?) AND " +
                     "( " + CalendarContract.Events.DTSTART + " >= ?)" +
                     //" AND ( "+CalendarContract.Events.DTEND + " <= ?)" +
                     ")";
             java.util.Calendar cal = java.util.Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             String[] selectionArgs = new String[]{
-                    PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString(Constants.PREF_ACCOUNT_NAME, null),
                     System.currentTimeMillis() + ""
                     // ,(System.currentTimeMillis()+(1000*60*60*24))+""
             };
