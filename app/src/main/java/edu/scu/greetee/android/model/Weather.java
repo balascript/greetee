@@ -12,7 +12,7 @@ import java.io.Serializable;
 public class Weather implements Serializable,Parcelable{
 
     private String Summary;
-    private double HiTemp, LowTemp,Temperature;
+    private int HiTemp, LowTemp,Temperature;
     private int LocationZip;
     private Location location;
     private int art,icon,id;
@@ -30,9 +30,9 @@ public class Weather implements Serializable,Parcelable{
 
     protected Weather(Parcel in) {
         Summary = in.readString();
-        HiTemp = in.readDouble();
-        LowTemp = in.readDouble();
-        Temperature = in.readDouble();
+        HiTemp = in.readInt();
+        LowTemp = in.readInt();
+        Temperature = in.readInt();
         LocationZip = in.readInt();
         location = in.readParcelable(Location.class.getClassLoader());
         art = in.readInt();
@@ -42,9 +42,9 @@ public class Weather implements Serializable,Parcelable{
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(Summary);
-        dest.writeDouble(HiTemp);
-        dest.writeDouble(LowTemp);
-        dest.writeDouble(Temperature);
+        dest.writeInt(HiTemp);
+        dest.writeInt(LowTemp);
+        dest.writeInt(Temperature);
         dest.writeInt(LocationZip);
         dest.writeParcelable(location, flags);
         dest.writeInt(art);
@@ -68,11 +68,11 @@ public class Weather implements Serializable,Parcelable{
         return Summary;
     }
 
-    public double getHiTemp() {
+    public int getHiTemp() {
         return HiTemp;
     }
 
-    public double getLowTemp() {
+    public int getLowTemp() {
         return LowTemp;
     }
 
@@ -100,11 +100,11 @@ public class Weather implements Serializable,Parcelable{
         Summary = summary;
     }
 
-    public void setHiTemp(double hiTemp) {
+    public void setHiTemp(int hiTemp) {
         HiTemp = hiTemp;
     }
 
-    public void setLowTemp(double lowTemp) {
+    public void setLowTemp(int lowTemp) {
         LowTemp = lowTemp;
     }
 
@@ -120,11 +120,11 @@ public class Weather implements Serializable,Parcelable{
         this.id = id;
     }
 
-    public double getTemperature() {
+    public int getTemperature() {
         return Temperature;
     }
 
-    public void setTemperature(double temperature) {
+    public void setTemperature(int temperature) {
         Temperature = temperature;
     }
 

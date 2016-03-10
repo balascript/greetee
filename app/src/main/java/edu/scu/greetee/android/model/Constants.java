@@ -39,6 +39,8 @@ public class Constants {
     public static final int SERVICE_RESPONSE_ALERT = 6051;
     public static final int SERVICE_REQUEST_ALERT = 6050;
     public static final String SERVICE_REQUEST_ALERT_STRING = "usermessage";
+    public static final int SERVICE_REQUEST_EVENTS = 6060;
+    public static final int SERVICE_RESPONSE_EVENTS = 6061;
     public static String HomeLocationString="HomeLocationString";
     public static String isHomeSelectedString="isHomeSelected";
     public static String isWorkSelectedString="isWorkSelected";

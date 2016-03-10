@@ -16,6 +16,10 @@ public class Event implements Parcelable,Serializable{
     private Address location;
     private long startDate,endDate;
 
+
+    private Direction direction;
+    private Weather weather;
+
     public Event(String name, String locationString,Address location, long startDate, long endDate) {
         Name = name;
         this.location = location;
@@ -84,5 +88,22 @@ public class Event implements Parcelable,Serializable{
 
     public void setLocation(Address location) {
         this.location = location;
+    }
+
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public Weather getWeather() {
+        return weather;
+    }
+
+    public void setWeather(Weather weather) {
+        this.weather = weather;
     }
 }

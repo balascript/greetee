@@ -12,4 +12,7 @@
     <dimen name="card_action_padding">8dp</dimen>
 
     <dimen name="card_stream_bottom_padding">90dp</dimen>
+    <dimen name="image_final_width">32dp</dimen>
+    <dimen name="spacing_normal">16dp</dimen>
+    <dimen name="image_width">120dp</dimen>
 </resources>

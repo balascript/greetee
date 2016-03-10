@@ -20,7 +20,8 @@
     <color name="grey_700">#646464</color>
     <color name="black">#000000</color>
     <color name="card_action_inverted">@android:color/white</color>
-
+    <color name="sunshine_light_blue_less">#a064c2f4</color>
+    <color name="sunshine_blue_less">#a01ca8f4</color>
     <color name="card_content_textcolor">#444</color>
 
     <color name="card_action_bg">#DDD</color>

@@ -38,9 +38,14 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="www.scu.edu" android:path="/greetee" />
+
+                <data
+                    android:host="www.scu.edu"
+                    android:path="/greetee"
+                    android:scheme="http" />
             </intent-filter>
         </activity>
         <activity android:name=".AppControllerActivity" />
@@ -50,15 +55,22 @@
             android:exported="false" />
 
         <activity
-            android:name="edu.scu.greetee.android.InfoActivity"
+            android:name=".InfoActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
-                <data android:mimeType="application/edu.scu.greetee.android"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter> 
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
+                <data android:mimeType="application/edu.scu.greetee.android" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+             
         </activity>
-        <activity android:name=".SettingsActivity"></activity>
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".GreeteeMainActivity"
+            android:theme="@style/AppThemeHome">
+
+        </activity>
     </application>
 
 </manifest>

@@ -2,7 +2,6 @@ package edu.scu.greetee.android.services;
 
 import android.Manifest;
 import android.app.IntentService;
-import android.app.usage.UsageEvents;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,13 +16,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
@@ -37,11 +33,10 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -57,6 +52,7 @@ import edu.scu.greetee.android.model.Weather;
  */
 public class GreeteeHTTPService extends IntentService {
     RequestQueue appQueue;
+    private Geocoder geocoder;
 
     public GreeteeHTTPService(String name) {
         super(name);
@@ -85,16 +81,22 @@ public class GreeteeHTTPService extends IntentService {
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_ALERT );
                 break;
             case Constants.SERVICE_REQUEST_WEATHER:
-                Weather report = getWeather(sharedPreferences.getFloat(Constants.HomeLatitudeString,0),sharedPreferences.getFloat(Constants.HomeLongitudeString,0));
+                Weather report = getWeatherForHome(sharedPreferences.getFloat(Constants.HomeLatitudeString,0),sharedPreferences.getFloat(Constants.HomeLongitudeString,0));
                 bundle.putParcelable("weather", report);
                 bIntent.putExtra("data", bundle);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_WEATHER);
                 break;
             case Constants.SERVICE_REQUEST_EVENT:
-                Event event = getNextEventForTheUserByProvider();
+                Event event = getNextEventForTheUserByProvider(sharedPreferences);
                 bundle.putParcelable("event", event);
                 bIntent.putExtra("data", bundle);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_EVENT);
+                break;
+            case Constants.SERVICE_REQUEST_EVENTS:
+                ArrayList<Event> events = getEventsForTheUserByProvider(sharedPreferences);
+                bundle.putParcelableArrayList("events", events);
+                bIntent.putExtra("data", bundle);
+                bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_EVENTS);
                 break;
             case Constants.SERVICE_REQUEST_WEATHER_EVENT:
                 Address query= intent.getExtras().getParcelable(Constants.SERVICE_REQUEST_WEATHER_EVENT_ADDRESS);
@@ -112,9 +114,59 @@ public class GreeteeHTTPService extends IntentService {
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_DIRECTION);
                 break;
 
+
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(bIntent);
 
+
+    }
+
+    private ArrayList<Event> getEventsForTheUserByProvider(SharedPreferences sharedPreferences) {
+        ArrayList<Event> list= new ArrayList<Event>();
+        try {
+            // Run query
+            if(geocoder==null)
+                geocoder=new Geocoder(getApplicationContext(), Locale.getDefault());
+            list.add(getWorkEvent(sharedPreferences));
+            Cursor cur = null;
+            ContentResolver cr = getContentResolver();
+            Uri uri = CalendarContract.Events.CONTENT_URI;
+            String selection = "(" +
+                    "( " + CalendarContract.Events.DTSTART + " >= ?)" +
+                    " AND ( "+CalendarContract.Events.DTEND + " <= ?)" +
+                    ")";
+            String[] selectionArgs = new String[]{
+                    System.currentTimeMillis() + ""
+                    ,(System.currentTimeMillis()+(1000*60*60*24))+""
+            };
+            // Submit the query and get a Cursor object back.
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+                return null;
+            }
+            cur = cr.query(uri, Constants.EVENTS_PROJECTION, selection, selectionArgs, CalendarContract.Events.DTSTART + " ASC");
+            while(cur.moveToNext()){
+                String NameofEvent = cur.getString(Constants.PROJECTION_TITLE_INDEX),
+                        eventLocation = cur.getString(Constants.PROJECTION_EVENT_LOCATION_INDEX);
+                long start = cur.getLong(Constants.PROJECTION_BEGIN_INDEX);
+                long end = cur.getLong(Constants.PROJECTION_END_INDEX);
+                Event event = new Event(NameofEvent, eventLocation, null, new Date(start).getTime(), new Date(end).getTime());
+                if(event!=null){
+                    List<Address> loc= geocoder.getFromLocationName(event.getLocationString(),1);
+                    if(!loc.isEmpty()){
+                        event.setLocation(loc.get(0));
+                        event.setWeather(getWeatherForHome(event.getLocation().getLatitude(),event.getLocation().getLongitude()));
+                        event.setDirection(getDirectionFromHome(event.getLocation(),sharedPreferences));
+                    }
+
+                }
+                list.add(event);
+            }
+            return list;
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
 
     }
 
@@ -122,14 +174,14 @@ public class GreeteeHTTPService extends IntentService {
         Geocoder geocoder;
         geocoder=new Geocoder(getBaseContext(), Locale.getDefault());
         StringBuilder builder= new StringBuilder();
-        Weather current=getWeather(pref.getFloat(Constants.HomeLatitudeString,0),pref.getFloat(Constants.HomeLongitudeString,0));
+        Weather current= getWeatherForHome(pref.getFloat(Constants.HomeLatitudeString,0),pref.getFloat(Constants.HomeLongitudeString,0));
         if(current!=null){
             builder.append(" Its "+current.getTemperature()+"℉ and " +current.getSummary()+" outside.");
         }
         else{
             builder.append(" I am sorry, I could't get you the weather update");
         }
-        Event nextEvent= getNextEventForTheUserByProvider();
+        Event nextEvent= getNextEventForTheUserByProvider(pref);
         if(nextEvent==null){
             builder.append(" I couldn't find any event from your calendar in next 24 hours ! Have a fun Day :)");
         }
@@ -185,7 +237,7 @@ public class GreeteeHTTPService extends IntentService {
 
     }
 
-    private Weather getWeather(double lat, double lon) {
+    private Weather getWeatherForHome(double lat, double lon) {
 
         try {
             RequestFuture<JSONObject> future = RequestFuture.newFuture();
@@ -224,9 +276,9 @@ public class GreeteeHTTPService extends IntentService {
 
             JSONObject temperatureObject = response.getJSONObject("main");
 
-            weather.setHiTemp(temperatureObject.getDouble("temp_max"));
-            weather.setLowTemp(temperatureObject.getDouble("temp_min"));
-            weather.setTemperature(temperatureObject.getDouble("temp"));
+            weather.setHiTemp((int) temperatureObject.getDouble("temp_max"));
+            weather.setLowTemp((int) temperatureObject.getDouble("temp_min"));
+            weather.setTemperature((int) temperatureObject.getDouble("temp"));
 
             return weather;
 
@@ -250,65 +302,25 @@ public class GreeteeHTTPService extends IntentService {
 
     }
 
+    private Event getWorkEvent(SharedPreferences pref){
 
-
-/*    private Event getNextEventForTheUser() {
-        com.google.api.services.calendar.Calendar mService = null;
-        Exception mLastError = null;
-        GoogleAccountCredential mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(Constants.SCOPES))
-                .setBackOff(new ExponentialBackOff())
-                .setSelectedAccountName(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString(Constants.PREF_ACCOUNT_NAME, null));
-        if (!isDeviceOnline()) {
-            return null;
+        Weather weather;
+        Direction dir;
+        Event workEvent;
+        if(pref.getBoolean(Constants.isWorkSelectedString,false)){
+            weather=getWeatherForHome(pref.getFloat(Constants.WorkLatitudeString,0),pref.getFloat(Constants.WorkLongitudeString,0));
+            dir=getDirectionFromHomeToWork(pref);
+            workEvent= new Event("###Work Place ",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
+            workEvent.setDirection(dir);
+            workEvent.setWeather(weather);
         }
-        HttpTransport transport = AndroidHttp.newCompatibleTransport();
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        mService = new com.google.api.services.calendar.Calendar.Builder(
-                transport, jsonFactory, mCredential)
-                .setApplicationName(this.getPackageName())
-                .build();
-
-        DateTime now = new DateTime(System.currentTimeMillis());
-        java.util.Calendar todayEOD = java.util.Calendar.getInstance();
-        todayEOD.set(todayEOD.YEAR, todayEOD.MONTH, todayEOD.DAY_OF_MONTH, 23, 59, 59);
-        Events events = null;
-        try {
-            events = mService.events().list("primary")
-                    .setMaxResults(10)
-                    .setTimeMin(now)
-                    .setOrderBy("startTime")
-                    .setSingleEvents(true)
-                    .setTimeMax(new DateTime(System.currentTimeMillis() + (1000 * 60 * 60 * 24)))
-                    .execute();
-            List<com.google.api.services.calendar.model.Event> items = events.getItems();
-           *//* for (com.google.api.services.calendar.model.Event event : items) {
-
-                DateTime start = event.getStart().getDateTime();
-                if (start == null) {
-                    start = event.getStart().getDate();
-                }
-
-
-            }*//*
-            com.google.api.services.calendar.model.Event event = items.get(0);
-            if (event == null)
-                return null;
-            DateTime startTime = event.getStart().getDateTime() == null ? event.getStart().getDate() : event.getStart().getDateTime();
-            DateTime endTime = event.getEnd().getDateTime() == null ? event.getEnd().getDate() : event.getEnd().getDateTime();
-            Event calendarEvent = new Event(event.getSummary(), event.getLocation(), null, startTime.getValue(), endTime.getValue());
-            return calendarEvent;
-        } catch (UserRecoverableAuthIOException e) {
-            Intent errorIntent = new Intent(Constants.SERVICE_INTENT);
-            errorIntent.putExtra(Constants.SERVICE_RESPONSE, Constants.USERAUTHERROR);
-            errorIntent.putExtra("intent", e.getIntent());
-            LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        else{
+            workEvent= new Event("$$$Add Your Work Place",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
         }
-    }*/
+
+        return workEvent;
+    }
+
 
     private boolean isDeviceOnline() {
         ConnectivityManager connMgr =
@@ -317,20 +329,21 @@ public class GreeteeHTTPService extends IntentService {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-    private Event getNextEventForTheUserByProvider() {
+    private Event getNextEventForTheUserByProvider(SharedPreferences sharedPreferences) {
         try {
             // Run query
+            if(geocoder==null)
+                geocoder=new Geocoder(getApplicationContext(), Locale.getDefault());
             Cursor cur = null;
             ContentResolver cr = getContentResolver();
             Uri uri = CalendarContract.Events.CONTENT_URI;
             String selection = "(" +
                     "( " + CalendarContract.Events.DTSTART + " >= ?)" +
-                    //" AND ( "+CalendarContract.Events.DTEND + " <= ?)" +
+                    " AND ( "+CalendarContract.Events.DTEND + " <= ?)" +
                     ")";
-            java.util.Calendar cal = java.util.Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             String[] selectionArgs = new String[]{
                     System.currentTimeMillis() + ""
-                    // ,(System.currentTimeMillis()+(1000*60*60*24))+""
+                    ,(System.currentTimeMillis()+(1000*60*60*24))+""
             };
             // Submit the query and get a Cursor object back.
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -343,6 +356,15 @@ public class GreeteeHTTPService extends IntentService {
                 long start = cur.getLong(Constants.PROJECTION_BEGIN_INDEX);
                 long end = cur.getLong(Constants.PROJECTION_END_INDEX);
                 Event event = new Event(NameofEvent, eventLocation, null, new Date(start).getTime(), new Date(end).getTime());
+                if(event!=null){
+                    List<Address> loc= geocoder.getFromLocationName(event.getLocationString(),1);
+                    if(!loc.isEmpty()){
+                        event.setLocation(loc.get(0));
+                        event.setWeather(getWeatherForHome(event.getLocation().getLatitude(),event.getLocation().getLongitude()));
+                        event.setDirection(getDirectionFromHome(event.getLocation(),sharedPreferences));
+                    }
+
+                }
                 return event;
             }
             else return null;
@@ -360,7 +382,7 @@ public class GreeteeHTTPService extends IntentService {
             Uri builtUri = Uri.parse(Constants.Google_MAP_URI).buildUpon()
                     .appendQueryParameter("sensor","false").appendQueryParameter("units","imperial")
                     .appendQueryParameter("mode","driving")
-                    .appendQueryParameter("origin","santaclara") /// hardcoded by frustration. TODO figureout the map activity soon
+                    .appendQueryParameter("origin",origin.getLocality()) /// hardcoded by frustration. TODO figureout the map activity soon
                     .appendQueryParameter("destination",destination.getLocality())
                     .appendQueryParameter("key",Constants.GOOGLE_API_KEY)
                     .build();
@@ -388,8 +410,136 @@ public class GreeteeHTTPService extends IntentService {
                         legs = legsArray.getJSONObject(0);
 
                     double timeSec = legs.getJSONObject("duration").getDouble("value");
+                    String distance= legs.getJSONObject("distance").getString("text");
+                    return new Direction((int) timeSec,distance);
 
-                    return new Direction((int) timeSec,10);
+                }
+            }
+            return null;
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+            return null;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private Direction getDirectionFromHome( Address event,SharedPreferences preferences)
+    {
+        try{
+            String origin= preferences.getString(Constants.HomeLocationString,"");
+            RequestFuture<JSONObject> future = RequestFuture.newFuture();
+            Uri builtUri = Uri.parse(Constants.Google_MAP_URI).buildUpon()
+                    .appendQueryParameter("sensor","false").appendQueryParameter("units","imperial")
+                    .appendQueryParameter("mode","driving")
+                    .appendQueryParameter("origin",origin)
+                    .appendQueryParameter("destination",event.getLocality())
+                    .appendQueryParameter("key",Constants.GOOGLE_API_KEY)
+                    .build();
+            URL url = new URL(builtUri.toString());
+
+
+            JsonObjectRequest request = new JsonObjectRequest(url.toString(), null, future, future);
+            appQueue.add(request);
+
+            JSONObject response = future.get(100, TimeUnit.SECONDS); // this will block (forever) if supplied nothing
+
+            JSONArray routesArray = response.getJSONArray("routes");
+
+            if (routesArray.length() > 0) {
+                JSONObject routeDict = routesArray.getJSONObject(0);
+                JSONArray legsArray = routeDict.getJSONArray("legs");
+
+                if (legsArray.length() > 0) {
+
+                    JSONObject legs;
+
+                    if (legsArray.length() > 1)
+                        legs = legsArray.getJSONObject(1);
+                    else
+                        legs = legsArray.getJSONObject(0);
+
+                    double timeSec = legs.getJSONObject("duration").getDouble("value");
+                    String distance= legs.getJSONObject("distance").getString("text");
+
+                    return new Direction((int) timeSec,distance);
+
+                }
+            }
+            return null;
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+            return null;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    private Direction getDirectionFromHomeToWork(SharedPreferences preferences)
+    {
+        try{
+            String origin= preferences.getString(Constants.HomeLocationString,"");
+            String destination= preferences.getString(Constants.WorkLocationString,"");
+            RequestFuture<JSONObject> future = RequestFuture.newFuture();
+            Uri builtUri = Uri.parse(Constants.Google_MAP_URI).buildUpon()
+                    .appendQueryParameter("sensor","false").appendQueryParameter("units","imperial")
+                    .appendQueryParameter("mode","driving")
+                    .appendQueryParameter("origin",origin)
+                    .appendQueryParameter("destination",destination)
+                    .appendQueryParameter("key",Constants.GOOGLE_API_KEY)
+                    .build();
+            URL url = new URL(builtUri.toString());
+
+
+            JsonObjectRequest request = new JsonObjectRequest(url.toString(), null, future, future);
+            appQueue.add(request);
+
+            JSONObject response = future.get(100, TimeUnit.SECONDS); // this will block (forever) if supplied nothing
+
+            JSONArray routesArray = response.getJSONArray("routes");
+
+            if (routesArray.length() > 0) {
+                JSONObject routeDict = routesArray.getJSONObject(0);
+                JSONArray legsArray = routeDict.getJSONArray("legs");
+
+                if (legsArray.length() > 0) {
+
+                    JSONObject legs;
+
+                    if (legsArray.length() > 1)
+                        legs = legsArray.getJSONObject(1);
+                    else
+                        legs = legsArray.getJSONObject(0);
+
+                    double timeSec = legs.getJSONObject("duration").getDouble("value");
+                    String distance= legs.getJSONObject("distance").getString("text");
+
+                    return new Direction((int) timeSec,distance);
 
                 }
             }
@@ -453,9 +603,9 @@ public class GreeteeHTTPService extends IntentService {
 
             JSONObject temperatureObject = response.getJSONObject("main");
 
-            weather.setHiTemp(temperatureObject.getDouble("temp_max"));
-            weather.setLowTemp(temperatureObject.getDouble("temp_min"));
-            weather.setTemperature(temperatureObject.getDouble("temp"));
+            weather.setHiTemp((int) temperatureObject.getDouble("temp_max"));
+            weather.setLowTemp((int) temperatureObject.getDouble("temp_min"));
+            weather.setTemperature((int) temperatureObject.getDouble("temp"));
 
             return weather;
 
@@ -478,5 +628,7 @@ public class GreeteeHTTPService extends IntentService {
         }
 
     }
+
+
 
 }

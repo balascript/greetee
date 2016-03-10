@@ -63,10 +63,12 @@ public class AppControllerActivity extends AppCompatActivity {
             startActivity(settingsActivity);
         }
         if (id == R.id.menu_uninstall) {
+            Intent greetee= new Intent(this, GreeteeMainActivity.class);
+            startActivity(greetee);
 
-            Uri packageURI = Uri.parse("package:"+this.getApplication().getPackageName());
+        /*    Uri packageURI = Uri.parse("package:"+this.getApplication().getPackageName());
             Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
-            startActivity(uninstallIntent);
+            startActivity(uninstallIntent);*/
             return true;
         }
         return super.onOptionsItemSelected(item);

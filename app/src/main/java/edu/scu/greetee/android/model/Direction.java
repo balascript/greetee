@@ -10,16 +10,16 @@ import java.io.Serializable;
  */
 public class Direction implements Parcelable,Serializable {
     private int duration;
-    private int distance;
+    private String distance;
 
-    public Direction(int duration, int distance) {
+    public Direction(int duration, String distance) {
         this.duration = duration;
         this.distance = distance;
     }
 
     protected Direction(Parcel in) {
         duration = in.readInt();
-        distance = in.readInt();
+        distance = in.readString();
     }
 
     public static final Creator<Direction> CREATOR = new Creator<Direction>() {
@@ -38,7 +38,7 @@ public class Direction implements Parcelable,Serializable {
         this.duration = duration;
     }
 
-    public void setDistance(int distance) {
+    public void setDistance(String distance) {
         this.distance = distance;
     }
 
@@ -50,14 +50,14 @@ public class Direction implements Parcelable,Serializable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(duration);
-        dest.writeInt(distance);
+        dest.writeString(distance);
     }
 
     public int getDuration() {
         return duration;
     }
 
-    public int getDistance() {
+    public String getDistance() {
         return distance;
     }
 }
