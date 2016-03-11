@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.adapters;
 
 import android.content.Context;
 import android.support.design.widget.CoordinatorLayout;
@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import edu.scu.greetee.android.R;
 
 @SuppressWarnings("unused")
 public class AvatarImageBehavior extends CoordinatorLayout.Behavior<CircleImageView> {

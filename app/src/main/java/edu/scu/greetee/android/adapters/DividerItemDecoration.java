@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.adapters;
 
 import android.content.Context;
 import android.content.res.TypedArray;

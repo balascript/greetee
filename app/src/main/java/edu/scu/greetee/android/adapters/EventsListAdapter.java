@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import edu.scu.greetee.android.R;
+import edu.scu.greetee.android.Utility;
 import edu.scu.greetee.android.model.Event;
 
 /**

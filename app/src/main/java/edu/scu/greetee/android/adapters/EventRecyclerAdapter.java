@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import edu.scu.greetee.android.R;
+import edu.scu.greetee.android.Utility;
 import edu.scu.greetee.android.model.Event;
 
 /**
@@ -53,6 +55,7 @@ public class EventRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         Event event= data.get(position);
+        String eventweather_update = "";
         switch (holder.getItemViewType()) {
             case 1:
                 WorkViewHolder wholder=(WorkViewHolder)holder;
@@ -62,15 +65,31 @@ public class EventRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
                 }
                 else if(event.getName().startsWith("###")){
                     wholder.eventStart.setText("Update for Work");
-                    if(event.getWeather()!=null)
-                        wholder.eventWeather.setText(" (" + event.getWeather().getTemperature() + "℉ )");
+                    if(event.getLocation()!=null)
+                        eventweather_update += event.getLocation().getLocality() == null ? event.getLocationString() : event.getLocation().getLocality();
+                    if(event.getWeather()!=null) {
+                        eventweather_update +=" (" + event.getWeather().getTemperature() + "℉ )";
+                        wholder.icon.setImageResource(Utility.getIconResourceForWeatherCondition(event.getWeather().getId()));
+                    }
+                    else{
+                        eventweather_update += " (Weather undetermined)";
+                    }
+                    wholder.eventWeather.setText(eventweather_update);
+                    if (event.getDirection() != null) {
+
+                        wholder.eventDistance.setText(event.getDirection().getDistance());
+                        int time[] = Utility.splitToComponentTimes(BigDecimal.valueOf(event.getDirection().getDuration()));
+                        wholder.eventETA.setText((time[0] > 0 ? (time[0] + "Hr") : "") + (time[1] > 0 ? (time[1] + "M") : ""));
+                        wholder.eventDistance.setVisibility(View.VISIBLE);
+                        wholder.eventETA.setVisibility(View.VISIBLE);
+                    }
                 }
                 break;
             case 2:
                 EventsViewHolder eholder=(EventsViewHolder)holder;
                 eholder.eventStart.setText(dateFormat.format(new Date(event.getStartDate())) + " - " + event.getName());
 
-                String eventweather_update = "";
+
                 if (event.getLocation() != null) {
                     eventweather_update += event.getLocation().getLocality() == null ? event.getLocationString() : event.getLocation().getLocality();
                 } else

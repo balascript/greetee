@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.activities;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -21,7 +21,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
 
-
+import edu.scu.greetee.android.R;
+import edu.scu.greetee.android.Utility;
 import edu.scu.greetee.android.model.Constants;
 
 public class WelcomeActivity extends AppCompatActivity {
@@ -66,7 +67,7 @@ public class WelcomeActivity extends AppCompatActivity {
             @Override
             public void run(){
                 Intent i = new Intent(WelcomeActivity.this, SettingsActivity.class);
-                i.putExtra("FirstTime",true);
+                i.putExtra("welcome",true);
                 startActivity(i);
                 finish();
             }

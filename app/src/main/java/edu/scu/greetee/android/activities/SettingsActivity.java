@@ -1,4 +1,4 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.activities;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -15,9 +14,7 @@ import android.nfc.Tag;
 import android.nfc.TagLostException;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
-import android.nfc.tech.NfcF;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,33 +31,36 @@ import com.google.android.gms.location.places.ui.PlacePicker;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import edu.scu.greetee.android.R;
+import edu.scu.greetee.android.Utility;
 import edu.scu.greetee.android.model.Constants;
+import edu.scu.greetee.android.services.GreeteeHTTPService;
 
 public class SettingsActivity extends AppCompatActivity {
 
-  View Home,Work,Units,NFC;
-    TextView home,work,units,nfc;
+  View Home,Work,NFC;
+    TextView home,work,nfc;
     private final int RequestHomePlace=11;
     private final int RequestWorkPlace=12;
     SharedPreferences sharedpreferences;
+    boolean isLaunchedByWelcomeActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        isLaunchedByWelcomeActivity=getIntent().getBooleanExtra("welcome",false);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle("Configuration");
         }
         sharedpreferences= PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
-
         Home=  findViewById(R.id.home_card);
         home=(TextView)Home.findViewById(R.id.home_location_text);
         Work=  findViewById(R.id.work_card);
         work=(TextView)Work.findViewById(R.id.work_location_text);
-        Units=  findViewById(R.id.unit_card);
-        units=(TextView)Units.findViewById(R.id.preferred_unit_text);
+
         NFC=  findViewById(R.id.nfc_card);
         nfc=(TextView)NFC.findViewById(R.id.nfc_text);
         final PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
@@ -106,7 +106,6 @@ public class SettingsActivity extends AppCompatActivity {
         };
         Home.setOnClickListener(lis);
         Work.setOnClickListener(lis);
-        Units.setOnClickListener(lis);
         NFC.setOnClickListener(lis);
         if(sharedpreferences.getBoolean(Constants.isHomeSelectedString,false)){
             home.setText(sharedpreferences.getString(Constants.HomeLocationString,"Un-named"));
@@ -161,10 +160,27 @@ public class SettingsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            finish();
+                if(isLaunchedByWelcomeActivity && Utility.isNecessarySettingsDone(this)){
+                    Intent main= new Intent(this,GreeteeMainActivity.class);
+                    startActivity(main);
+                }else{
+                    finish();
+                }
+
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(isLaunchedByWelcomeActivity && Utility.isNecessarySettingsDone(this)){
+            Intent main= new Intent(this,GreeteeMainActivity.class);
+            startActivity(main);
+        }else{
+            finish();
+        }
+        super.onBackPressed();
     }
 
     @Override

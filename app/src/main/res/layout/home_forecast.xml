@@ -1,172 +1,240 @@
 <!-- Layout for weather forecast list item for today -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
-    android:orientation="vertical">
+    android:background="@android:color/background_dark">
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/alert_bg"
+        android:scaleType="centerCrop"
+        android:alpha="0.7"/>
+    <TextView
+        android:id="@+id/waitmsg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="One Moment Please"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:shadowColor="#A0f5f5f5"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="8"
+        android:fontFamily="sans-serif-condensed"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:textColor="@color/white" />
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:minHeight="?android:attr/listPreferredItemHeight"
-        android:orientation="horizontal"
-        android:background="@drawable/today_touch_selector">
-
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:orientation="vertical">
         <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_weight="7"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:layout_marginLeft="60dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/list_item_date_textview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:textAppearanceLarge"
-                android:fontFamily="sans-serif-condensed"
-                android:textColor="@color/white"
-                android:text="Monday" />
-
-            <TextView
-                android:id="@+id/list_item_high_textview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="72sp"
-                android:fontFamily="sans-serif-light"
-                android:textColor="@color/white"
-                android:text="67" />
-
-            <TextView
-                android:id="@+id/list_item_low_textview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="36sp"
-                android:layout_marginLeft="8dp"
-                android:text="60" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_weight="5"
-            android:layout_marginRight="16dp"
-            android:orientation="vertical"
-            android:gravity="center_horizontal|bottom">
-
-            <ImageView
-                android:id="@+id/list_item_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:src="@drawable/art_snow" />
-
-            <TextView
-                android:id="@+id/list_item_forecast_textview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-condensed"
-                android:layout_gravity="center_horizontal"
-                android:textAppearance="?android:textAppearanceLarge"
-                android:textColor="@color/white"
-                android:text="Clear" />
-        </LinearLayout>
-
-
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/listPreferredItemHeightSmall"
-        android:background="@drawable/touch_selector"
-        android:layout_margin="5dp" >
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Upcoming Events from your Calendar"
-            android:gravity="center" />
-
-
-    </LinearLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?android:attr/listPreferredItemHeight"
-        android:background="@drawable/touch_selector">
-        <LinearLayout
+            android:id="@+id/weatheralertlayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:layout_marginTop="?android:attr/listPreferredItemHeight"
+            android:minHeight="?android:attr/listPreferredItemHeight"
             android:orientation="horizontal"
-            android:visibility="visible">
-
-            <FrameLayout
-                android:layout_width="60dp"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:id="@+id/list_item_icon_work_weather"
-                    android:layout_gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_rain" />
-
-            </FrameLayout>
+            android:background="@drawable/today_touch_selector_less"
+            android:baselineAligned="false"
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
                 android:layout_weight="7"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="60dp"
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/list_item_event_start_textview"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/list_item_date_textview"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textAppearance="?android:textAppearanceLarge"
                     android:fontFamily="sans-serif-condensed"
-                    android:textSize="20sp"
-                    android:text="Meeting at 11am" />
+                    android:textColor="@color/white"
+                    android:shadowColor="#A0f5f5f5"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="8"/>
 
                 <TextView
-                    android:id="@+id/list_item_weather_textview"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/list_item_high_textview"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-condensed"
-                    android:textAppearance="?android:textAppearanceSmall"
-                    android:text="43 and rain at Milpitas" />
+                    android:textSize="72sp"
+                    android:fontFamily="sans-serif-light"
+                    android:textColor="@color/white"
+                    android:shadowColor="#A0f5f5f5"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="8"/>
+
+                <TextView
+                    android:id="@+id/list_item_low_textview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="36sp"
+                    android:layout_marginLeft="8dp"
+                    android:shadowColor="#A0f5f5f5"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="8"/>
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:layout_gravity="center"
-                android:orientation="vertical">
+                android:layout_width="0dp"
+                android:layout_weight="5"
+                android:layout_marginRight="16dp"
+                android:orientation="vertical"
+                android:gravity="center_horizontal|bottom">
 
-                <TextView
-                    android:id="@+id/list_item_eta"
+                <ImageView
+                    android:id="@+id/list_item_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    android:shadowColor="#A0f5f5f5"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="8"/>
+
+                <TextView
+                    android:id="@+id/list_item_forecast_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
+                    android:layout_gravity="center_horizontal"
                     android:textAppearance="?android:textAppearanceLarge"
-                    android:layout_weight="1"
-                    android:text="2 Hrs" />
-
-                <TextView
-                    android:id="@+id/list_item_distance_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="sans-serif-condensed"
-                    android:textAppearance="?android:textAppearanceSmall"
-                    android:layout_weight="1"
-                    android:text="65 Mi" />
+                    android:textColor="@color/white"
+                    android:shadowColor="#A0f5f5f5"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="8"/>
             </LinearLayout>
+
+
         </LinearLayout>
-    </RelativeLayout>
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="vertical"
+            android:id="@+id/eventupdateAlertLayout"
+            android:visibility="gone">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/listPreferredItemHeightSmall"
+                android:layout_gravity="center"
+                android:text="Upcoming Event from your Calendar"
+                android:gravity="center"
+                android:shadowColor="#A0f5f5f5"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="8"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/listPreferredItemHeight"
+                android:minHeight="?android:attr/listPreferredItemHeight"
+                android:background="@drawable/touch_selector_light">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical|center_horizontal"
+                    android:orientation="horizontal"
+                    android:visibility="visible">
+
+                    <FrameLayout
+                        android:layout_width="60dp"
+                        android:layout_height="fill_parent">
+
+                        <ImageView
+                            android:id="@+id/list_item_icon_work_weather"
+                            android:layout_gravity="center"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:shadowColor="#A0ffffff"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="10"/>
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_height="fill_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="7"
+                        android:orientation="vertical"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/list_item_event_start_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-condensed"
+                            android:textSize="20sp"
+                            android:shadowColor="#A0f5f5f5"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="8"/>
+
+                        <TextView
+                            android:id="@+id/list_item_weather_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-condensed"
+                            android:textAppearance="?android:textAppearanceSmall"
+                            android:shadowColor="#A0f5f5f5"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="8"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:layout_gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/list_item_eta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="sans-serif-condensed"
+                            android:textAppearance="?android:textAppearanceMedium"
+                            android:layout_weight="1"
+                            android:shadowColor="#A0f5f5f5"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="8"/>
+
+                        <TextView
+                            android:id="@+id/list_item_distance_text_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="sans-serif-condensed"
+                            android:textAppearance="?android:textAppearanceSmall"
+                            android:layout_weight="1"
+                            android:shadowColor="#A0f5f5f5"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="8"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+</FrameLayout>
+

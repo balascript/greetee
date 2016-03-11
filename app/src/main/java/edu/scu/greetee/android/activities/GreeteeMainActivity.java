@@ -1,11 +1,10 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.Address;
-import android.location.Geocoder;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.content.LocalBroadcastManager;
@@ -13,27 +12,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.math.BigDecimal;
+import com.squareup.picasso.Picasso;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import edu.scu.greetee.android.adapters.DividerItemDecoration;
+import edu.scu.greetee.android.adapters.EventRecyclerAdapter;
+import edu.scu.greetee.android.R;
+import edu.scu.greetee.android.adapters.RecyclerItemClickListener;
+import edu.scu.greetee.android.Utility;
+import edu.scu.greetee.android.adapters.WrappingLinearLayoutManager;
 import edu.scu.greetee.android.model.Constants;
-import edu.scu.greetee.android.model.Direction;
 import edu.scu.greetee.android.model.Event;
 import edu.scu.greetee.android.model.Weather;
 
@@ -65,11 +67,38 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
     private List<Event> events;
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.controllermenu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Intent settingsActivity= new Intent(this, SettingsActivity.class);
+            startActivity(settingsActivity);
+        }
+        if (id == R.id.menu_uninstall) {
+           Uri packageURI = Uri.parse("package:"+this.getApplication().getPackageName());
+            Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
+            startActivity(uninstallIntent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    @Override
     protected void onResume() {
         super.onResume();
         IntentFilter intentFilter = new IntentFilter(Constants.SERVICE_INTENT);
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver,intentFilter);
-        startWeatherIntent();
+
 
     }
 
@@ -94,6 +123,7 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
         startAlphaAnimation(mTitle, 0, View.INVISIBLE);
         initUI();
         receiver= new DataReciever();
+        startWeatherIntent();
         startEventsIntent();
         events=new ArrayList<Event>();
         adapter= new EventRecyclerAdapter(events,this);
@@ -108,7 +138,8 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
                 new RecyclerItemClickListener(this, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
                        if(position==0&& !PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(Constants.isWorkSelectedString,false)){
-                           Toast.makeText(getApplicationContext(),"Set WorkLocation First",Toast.LENGTH_SHORT).show();
+                           Intent settingsActivity= new Intent(GreeteeMainActivity.this, SettingsActivity.class);
+                           startActivity(settingsActivity);
 
                        }
                     }
@@ -165,14 +196,14 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
             if(!mIsTheTitleVisible) {
                 startAlphaAnimation(mTitle, ALPHA_ANIMATIONS_DURATION, View.VISIBLE);
                 mIsTheTitleVisible = true;
-                mToolbar.setAlpha((float) 1);
+                mToolbar.setBackground(getResources().getDrawable(R.drawable.today_touch_selector));
             }
 
         } else {
 
             if (mIsTheTitleVisible) {
                 startAlphaAnimation(mTitle, ALPHA_ANIMATIONS_DURATION, View.INVISIBLE);
-                mToolbar.setAlpha((float) 0.0);
+                mToolbar.setBackground(getResources().getDrawable(R.drawable.today_touch_selector_transparent));
                 mIsTheTitleVisible = false;
 
             }
@@ -217,11 +248,11 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
                     Weather weahter=(Weather) bundleExtra.getParcelable("weather");
                     weatherInfo.setVisibility(View.VISIBLE);
                     welcomeMsg.setVisibility(View.GONE);
-                    HiTemp.setText((int)weahter.getHiTemp()+"");
-                    LowTemp.setText(weahter.getLowTemp()+"");
+                    HiTemp.setText((int)weahter.getTemperature()+" ℉");
+                    LowTemp.setText(weahter.getLowTemp()+" ℉");
                     Day.setText(new SimpleDateFormat("EEEE", Locale.ENGLISH).format(Calendar.getInstance().getTime()));
                     WeatherIcon.setImageResource(weahter.getArt());
-                    WeatherBG.setImageResource(Utility.getBgResourceForWeatherCondition(weahter.getId()));
+                    Picasso.with(GreeteeMainActivity.this).load(Utility.getBgResourceForWeatherCondition(weahter.getId())).into(WeatherBG);
                     Description.setText(weahter.getSummary());
                     break;
                 case Constants.SERVICE_RESPONSE_EVENTS:

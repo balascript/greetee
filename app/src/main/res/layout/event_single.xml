@@ -36,16 +36,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-condensed"
-                android:textSize="20sp"
-                android:text="Meeting at 11am" />
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/list_item_weather_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-condensed"
-                android:textAppearance="?android:textAppearanceSmall"
-                android:text="43 and rain at Milpitas" />
+                android:textAppearance="?android:textAppearanceSmall" />
         </LinearLayout>
 
         <LinearLayout

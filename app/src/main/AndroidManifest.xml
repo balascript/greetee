@@ -29,7 +29,7 @@
             android:value="AIzaSyAxlsK13PZUtIVSTJu2_FXpdnTowgDGbgQ" />
 
         <activity
-            android:name=".WelcomeActivity"
+            android:name=".activities.WelcomeActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,14 +48,14 @@
                     android:scheme="http" />
             </intent-filter>
         </activity>
-        <activity android:name=".AppControllerActivity" />
+        <activity android:name=".activities.AppControllerActivity" />
 
         <service
             android:name=".services.GreeteeHTTPService"
             android:exported="false" />
 
         <activity
-            android:name=".InfoActivity"
+            android:name=".activities.InfoActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
@@ -66,8 +66,8 @@
             </intent-filter>
              
         </activity>
-        <activity android:name=".SettingsActivity" />
-        <activity android:name=".GreeteeMainActivity"
+        <activity android:name=".activities.SettingsActivity" />
+        <activity android:name=".activities.GreeteeMainActivity"
             android:theme="@style/AppThemeHome">
 
         </activity>

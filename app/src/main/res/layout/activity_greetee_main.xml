@@ -187,14 +187,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="8dp"
                 android:padding="2dp"
                 android:orientation="vertical">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/touch_selector"
-                    android:layout_margin="5dp" >
+                    android:layout_margin="5dp"
+                    android:minHeight="?attr/actionBarSize">
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -220,8 +220,7 @@
             android:id="@+id/main.toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@drawable/today_touch_selector"
-            android:alpha="0.0"
+            android:background="@drawable/today_touch_selector_transparent"
             app:layout_anchor="@id/main.framelayout.title"
             app:theme="@style/ThemeOverlay.AppCompat.Dark"
             app:title=""
@@ -231,7 +230,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:background="@drawable/today_touch_selector"                >
+                android:background="@android:color/transparent"                >
 
                 <Space
                     android:layout_width="@dimen/image_final_width"
@@ -247,6 +246,7 @@
                     android:text="Greetee"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
+                    android:background="@android:color/transparent"
                     />
 
             </LinearLayout>
@@ -259,7 +259,7 @@
             android:src="@mipmap/ic_launcher"
             app:border_color="@android:color/white"
             app:border_width="2dp"
-            app:layout_behavior="edu.scu.greetee.android.AvatarImageBehavior"
+            app:layout_behavior="edu.scu.greetee.android.adapters.AvatarImageBehavior"
             />
 
     </android.support.design.widget.CoordinatorLayout>

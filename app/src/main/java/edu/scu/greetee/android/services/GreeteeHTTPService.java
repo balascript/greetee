@@ -76,9 +76,14 @@ public class GreeteeHTTPService extends IntentService {
         Intent bIntent = new Intent(Constants.SERVICE_INTENT);
         switch (operation) {
             case Constants.SERVICE_REQUEST_ALERT:
-                String userMessage= getUserMessage(sharedPreferences);
+                Weather alertreport = getWeatherForHome(sharedPreferences.getFloat(Constants.HomeLatitudeString,0),sharedPreferences.getFloat(Constants.HomeLongitudeString,0));
+                Event alertevent = getNextEventForTheUserByProvider(sharedPreferences);
+                bundle.putParcelable("event", alertevent);
+                bundle.putParcelable("weather",alertreport);
+                String userMessage= getUserMessage(alertevent,alertreport);
                 bIntent.putExtra(Constants.SERVICE_REQUEST_ALERT_STRING,userMessage);
                 bIntent.putExtra(Constants.SERVICE_RESPONSE,Constants.SERVICE_RESPONSE_ALERT );
+                bIntent.putExtra("data", bundle);
                 break;
             case Constants.SERVICE_REQUEST_WEATHER:
                 Weather report = getWeatherForHome(sharedPreferences.getFloat(Constants.HomeLatitudeString,0),sharedPreferences.getFloat(Constants.HomeLongitudeString,0));
@@ -119,6 +124,38 @@ public class GreeteeHTTPService extends IntentService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(bIntent);
 
 
+    }
+
+    private String getUserMessage(Event alertevent, Weather alertreport) {
+        StringBuilder builder= new StringBuilder();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a");
+        String logical_location=null;
+        if(alertreport!=null){
+            builder.append(" Its "+alertreport.getTemperature()+"℉ and " +alertreport.getSummary()+" outside.");
+        }
+        else{
+            builder.append(" I am sorry, I could't get you the weather update.");
+        }
+        if(alertevent.getName().startsWith("$$$")){
+            builder.append(" I couldn't find any event from your calendar in next 24 hours ! Have a fun Day!");
+        }
+        else if(alertevent.getName().startsWith("###")){
+            builder.append("Are you Heading to work?? ");
+        }
+        else {
+            logical_location =alertevent.getLocation().getLocality();
+            builder.append(" I found '"+alertevent.getName()+"' at "+(logical_location==null?alertevent.getLocationString():logical_location) +" at "+dateFormat.format(new Date(alertevent.getStartDate()))+"." );
+        }
+        if(alertevent.getWeather()!=null){
+            logical_location =alertevent.getLocation().getLocality();
+            builder.append("\n\n Its "+alertevent.getWeather().getTemperature()+"℉ and " +alertevent.getWeather().getSummary()+" at "+(logical_location==null?alertevent.getLocationString():logical_location)+".");
+          //  builder.append("Its "+alertevent.getWeather().getTemperature()+" at "+(logical_location==null?alertevent.getLocationString():logical_location) );
+        }
+        if(alertevent.getDirection()!=null){
+            int time[]= Utility.splitToComponentTimes(BigDecimal.valueOf(alertevent.getDirection().getDuration()));
+            builder.append(" You can reach there in " + (time[0]>0?(time[0]+" Hours "):"")+(time[1]>0?(time[1]+" Minutes."):"."));
+        }
+        return builder.toString();
     }
 
     private ArrayList<Event> getEventsForTheUserByProvider(SharedPreferences sharedPreferences) {
@@ -306,13 +343,28 @@ public class GreeteeHTTPService extends IntentService {
 
         Weather weather;
         Direction dir;
-        Event workEvent;
+        Event workEvent = null;
         if(pref.getBoolean(Constants.isWorkSelectedString,false)){
-            weather=getWeatherForHome(pref.getFloat(Constants.WorkLatitudeString,0),pref.getFloat(Constants.WorkLongitudeString,0));
-            dir=getDirectionFromHomeToWork(pref);
-            workEvent= new Event("###Work Place ",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
-            workEvent.setDirection(dir);
-            workEvent.setWeather(weather);
+            List<Address> loc= null;
+            try {
+/*                weather=getWeatherForHome(pref.getFloat(Constants.WorkLatitudeString,0),pref.getFloat(Constants.WorkLongitudeString,0));
+                dir=getDirectionFromHomeToWork(pref);*/
+                loc = geocoder.getFromLocationName(pref.getString(Constants.WorkLocationString,""),1);
+                workEvent= new Event("###Work Place ",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
+                if(!loc.isEmpty()){
+                    workEvent.setLocation(loc.get(0));
+                    workEvent.setWeather(getWeatherForHome(workEvent.getLocation().getLatitude(),workEvent.getLocation().getLongitude()));
+                    workEvent.setDirection(getDirectionFromHome(workEvent.getLocation(),pref));
+                }
+                else {
+                    return new Event("$$$Add Your Work Place",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+
         }
         else{
             workEvent= new Event("$$$Add Your Work Place",pref.getString(Constants.WorkLocationString,""),null,-1,-1);
@@ -343,7 +395,7 @@ public class GreeteeHTTPService extends IntentService {
                     ")";
             String[] selectionArgs = new String[]{
                     System.currentTimeMillis() + ""
-                    ,(System.currentTimeMillis()+(1000*60*60*24))+""
+                    ,(System.currentTimeMillis()+(1000*60*60*4))+""   // next event within 4 hours
             };
             // Submit the query and get a Cursor object back.
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -365,9 +417,12 @@ public class GreeteeHTTPService extends IntentService {
                     }
 
                 }
+                else{
+                    event=getWorkEvent(sharedPreferences);
+                }
                 return event;
             }
-            else return null;
+            else return getWorkEvent(sharedPreferences);
         }catch (Exception e){
             e.printStackTrace();
             return null;

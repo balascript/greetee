@@ -1,9 +1,11 @@
-package edu.scu.greetee.android;
+package edu.scu.greetee.android.adapters;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import edu.scu.greetee.android.R;
 
 /**
  * Created by srbkr on 3/10/2016.
