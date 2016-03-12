@@ -142,7 +142,7 @@ public class GreeteeHTTPService extends IntentService {
         else if(alertevent.getName().startsWith("###")){
             builder.append("Are you Heading to work?? ");
         }
-        else {
+        else if(alertevent.getLocation()!=null) {
             logical_location =alertevent.getLocation().getLocality();
             builder.append(" I found '"+alertevent.getName()+"' at "+(logical_location==null?alertevent.getLocationString():logical_location) +" at "+dateFormat.format(new Date(alertevent.getStartDate()))+"." );
         }

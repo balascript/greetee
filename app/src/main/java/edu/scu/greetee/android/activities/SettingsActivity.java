@@ -10,6 +10,7 @@ import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
+import android.nfc.NfcManager;
 import android.nfc.Tag;
 import android.nfc.TagLostException;
 import android.nfc.tech.Ndef;
@@ -106,16 +107,25 @@ public class SettingsActivity extends AppCompatActivity {
         };
         Home.setOnClickListener(lis);
         Work.setOnClickListener(lis);
-        NFC.setOnClickListener(lis);
+        NfcManager manager = (NfcManager) this.getSystemService(Context.NFC_SERVICE);
+        NfcAdapter adapter = manager.getDefaultAdapter();
+        if (adapter != null && adapter.isEnabled()) {
+            NFC.setOnClickListener(lis);
+            if(sharedpreferences.getBoolean(Constants.isNFCConfiguredString,false)){
+                nfc.setText("Configured atleast 1 Tag(s)");
+            }
+        }
+        else{
+            nfc.setText("Nfc not enabled/supported");
+        }
+
         if(sharedpreferences.getBoolean(Constants.isHomeSelectedString,false)){
             home.setText(sharedpreferences.getString(Constants.HomeLocationString,"Un-named"));
         }
         if(sharedpreferences.getBoolean(Constants.isWorkSelectedString,false)){
             work.setText(sharedpreferences.getString(Constants.WorkLocationString,"Un-named"));
         }
-        if(sharedpreferences.getBoolean(Constants.isNFCConfiguredString,false)){
-            work.setText("Configured atleast 1 Tag(s)");
-        }
+
 
 
     }
@@ -133,8 +143,10 @@ public class SettingsActivity extends AppCompatActivity {
                     editor.putBoolean(Constants.isHomeSelectedString,true);
                     editor.putFloat(Constants.HomeLatitudeString, (float) place.getLatLng().latitude);
                     editor.putFloat(Constants.HomeLongitudeString, (float) place.getLatLng().longitude);
+                    editor.putBoolean(Constants.SettingsChanged,true);
                     editor.commit();
                     home.setText(sharedpreferences.getString(Constants.HomeLocationString,"Un-named"));
+
 
                 }
                 break;
@@ -148,6 +160,7 @@ public class SettingsActivity extends AppCompatActivity {
                     editor.putBoolean(Constants.isWorkSelectedString,true);
                     editor.putFloat(Constants.WorkLatitudeString, (float) place.getLatLng().latitude);
                     editor.putFloat(Constants.WorkLongitudeString, (float) place.getLatLng().longitude);
+                    editor.putBoolean(Constants.SettingsChanged,true);
                     editor.commit();
                     work.setText(sharedpreferences.getString(Constants.WorkLocationString,"Un-named"));
 
@@ -195,6 +208,7 @@ public class SettingsActivity extends AppCompatActivity {
            if(writeTag(this, tag, nfcMessage)){
                Toast.makeText(this,"Done Successfully...",Toast.LENGTH_SHORT).show();
                editor.putBoolean(Constants.isNFCConfiguredString,true);
+               editor.commit();
            }
             else{
                Toast.makeText(this,"NFC configuration failed...",Toast.LENGTH_SHORT).show();

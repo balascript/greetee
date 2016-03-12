@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
@@ -60,8 +61,6 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
     private DataReciever receiver;
     private View welcomeMsg,weatherInfo;
 
-    //Listview operations
-
     private RecyclerView EventsListView;
     private EventRecyclerAdapter adapter;
     private List<Event> events;
@@ -75,12 +74,7 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent settingsActivity= new Intent(this, SettingsActivity.class);
             startActivity(settingsActivity);
@@ -98,8 +92,13 @@ public class GreeteeMainActivity extends AppCompatActivity  implements AppBarLay
         super.onResume();
         IntentFilter intentFilter = new IntentFilter(Constants.SERVICE_INTENT);
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver,intentFilter);
-
-
+        if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(Constants.SettingsChanged,false)){
+            startWeatherIntent();
+            startEventsIntent();
+        }
+        SharedPreferences.Editor edit=PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+        edit.putBoolean(Constants.SettingsChanged,false);
+        edit.commit();
     }
 
 

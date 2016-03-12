@@ -50,6 +50,7 @@ public class Constants {
     public static String WorkLatitudeString="worklatitude";
     public static String WorkLongitudeString="worklongitude";
     public static String isNFCConfiguredString="isNFCSelected";
+    public static String SettingsChanged="settingschanged";
 
     public static void toastMessage(Context ctx, String msg){
         Toast.makeText(ctx,msg,Toast.LENGTH_LONG);

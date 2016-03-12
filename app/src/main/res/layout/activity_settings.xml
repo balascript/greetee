@@ -52,6 +52,8 @@
                     android:text="Currently not configured"
                     android:layout_marginLeft="10dp"
                     android:id="@+id/home_location_text"
+                    android:ellipsize="end"
+                    android:singleLine="true"
                     android:layout_weight="1" />
             </LinearLayout>
 
@@ -102,6 +104,8 @@
                     android:layout_height="0dp"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:text="Currently not configured"
+                    android:ellipsize="end"
+                    android:singleLine="true"
                     android:layout_marginLeft="10dp"
                     android:id="@+id/work_location_text"
                     android:layout_weight="1" />
